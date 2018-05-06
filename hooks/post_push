@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+printf "Environment variables:\\n"
+printf "SOURCE_BRANCH=\"${SOURCE_BRANCH}\"\\n"
+printf "SOURCE_COMMIT=\"${SOURCE_COMMIT}\"\\n"
+printf "COMMIT_MSG=\"${COMMIT_MSG}\"\\n"
+printf "DOCKER_REPO=\"${DOCKER_REPO}\"\\n"
+printf "DOCKERFILE_PATH=\"${DOCKERFILE_PATH}\"\\n"
+printf "CACHE_TAG=\"${CACHE_TAG}\"\\n"
+printf "IMAGE_NAME=\"${IMAGE_NAME}\"\\n"
+
+if test "${SOURCE_BRANCH}" = "master"; then
+    INTERNAL_TAG_BASE_IMAGE_PART=$(sed -n "s/ARG BASE_IMAGE=\"\(.*\)\"/\1/p" Dockerfile | sed -e '1 s/:/-/; t')
+    INTERNAL_TAG_VERSION_PART=$(sed -n "s/ARG VERSION=\"\(.*\)\"/\1/p" Dockerfile)
+    INTERNAL_TAG="${INTERNAL_TAG_VERSION_PART}-on-${INTERNAL_TAG_BASE_IMAGE_PART}"
+
+    printf "Pushing ${IMAGE_NAME} also as ${DOCKER_REPO}:${INTERNAL_TAG}"
+    docker tag ${IMAGE_NAME} ${DOCKER_REPO}:${INTERNAL_TAG}-edge
+    docker push ${DOCKER_REPO}:${INTERNAL_TAG}
+fi
